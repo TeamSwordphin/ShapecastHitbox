@@ -6,6 +6,5 @@ license = "MIT"
 authors = ["TeamSwordphin", "colbert2677"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-private = true
 
 [dependencies]
