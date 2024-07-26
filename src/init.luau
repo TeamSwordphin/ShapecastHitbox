@@ -7,7 +7,7 @@
 -- August 2024
 
 --[=[
-	Documentation of the hitbox can be found inside at ShapecastHitbox/Hitbox.luau.
+	Documentation of the hitbox can be found inside at ShapecastHitbox/Types.luau.
 	This module is still relatively new and experimental, use at your own risk for 
 	production-level projects.
 ]=]
