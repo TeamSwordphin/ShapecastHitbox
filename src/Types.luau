@@ -261,13 +261,6 @@ export type Hitbox = {
 	CastData: CastData,
 	Attributes: { [any]: any },
 	FilterPartsHit: boolean,
-	_filterList: { [Instance]: boolean },
-	_callbacksStart: { StartCallback },
-	_callbacksUpdate: { UpdateCallback },
-	_callbacksHits: { HitCallback },
-	_callbacksStopped: { StopCallback },
-	_activeTimer: number,
-	_lastClock: number,
 	GetAllSegments: (self: Hitbox) -> { [any]: Segment },
 	GetSegment: (self: Hitbox, instance: Instance) -> Segment,
 	Reconcile: (self: Hitbox) -> (),
@@ -324,7 +317,7 @@ export type Segment = {
 	Position: Vector3,
 	RaycastResult: RaycastResult?,
 	CastData: CastData,
-	_move: (self: Segment) -> (),
+	_update: (self: Segment) -> (),
 }
 
 --[=[

@@ -11,7 +11,6 @@ local Visualizer = require(script.Parent.Visualizers)
 
 function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types.Hitbox
 	local hitbox = {
-		Scheduler = RunService.PostSimulation,
 		Instance = instance,
 		RaycastParams = raycastParams or RaycastParams.new(),
 		CastData = { CastType = "Raycast", Size = Vector3.zero, CFrame = CFrame.identity, Radius = 0 },
@@ -20,17 +19,32 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		Callbacks = {},
 		Attributes = {},
 		FilterPartsHit = false,
-		_filterList = {},
-		_callbacksStart = {},
-		_callbacksUpdate = {},
-		_callbacksHits = {},
-		_callbacksStopped = {},
-		_activeTimer = 0,
-		_lastClock = 0,
 	}
 
-	local postSimulation: RBXScriptConnection = RunService.PostSimulation
+	local filterList: { [Instance]: boolean } = {}
+	local callbacksStart: { Types.StartCallback } = {}
+	local callbacksUpdate: { Types.UpdateCallback } = {}
+	local callbacksHits: { Types.HitCallback } = {}
+	local callbacksStopped: { Types.StopCallback } = {}
+
+	local activeTimer: number = 0
+	local lastClock: number = 0
+
+	local postSimulation: RBXScriptConnection
 	local segments: { [Instance]: Types.Segment } = {}
+
+	local function ReturnHitboxAfterCallbackInsertion(
+		list: {
+			Types.HitCallback
+			| Types.StartCallback
+			| Types.UpdateCallback
+			| Types.StopCallback
+		},
+		callback: Types.HitCallback | Types.StartCallback | Types.UpdateCallback | Types.StopCallback
+	): Types.Hitbox
+		table.insert(list, callback)
+		return hitbox
+	end
 
 	function hitbox:GetAllSegments(): { [Instance]: Types.Segment }
 		return segments
@@ -65,24 +79,20 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		return hitbox
 	end
 
-	function hitbox:BeforeStart(startCallback: Types.StartCallback): Types.Hitbox
-		table.insert(hitbox._callbacksStart, startCallback)
-		return hitbox
+	function hitbox:BeforeStart(callback: Types.StartCallback): Types.Hitbox
+		return ReturnHitboxAfterCallbackInsertion(callbacksStart, callback)
 	end
 
-	function hitbox:OnUpdate(updateCallback: Types.UpdateCallback): Types.Hitbox
-		table.insert(hitbox._callbacksUpdate, updateCallback)
-		return hitbox
+	function hitbox:OnUpdate(callback: Types.UpdateCallback): Types.Hitbox
+		return ReturnHitboxAfterCallbackInsertion(callbacksUpdate, callback)
 	end
 
-	function hitbox:OnHit(hitCallback: Types.HitCallback): Types.Hitbox
-		table.insert(hitbox._callbacksHits, hitCallback)
-		return hitbox
+	function hitbox:OnHit(callback: Types.HitCallback): Types.Hitbox
+		return ReturnHitboxAfterCallbackInsertion(callbacksHits, callback)
 	end
 
-	function hitbox:OnStopped(stopCallback: Types.StopCallback): Types.Hitbox
-		table.insert(hitbox._callbacksStopped, stopCallback)
-		return hitbox
+	function hitbox:OnStopped(callback: Types.StopCallback): Types.Hitbox
+		return ReturnHitboxAfterCallbackInsertion(callbacksStopped, callback)
 	end
 
 	function hitbox:Reconcile(): Types.Hitbox
@@ -110,7 +120,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 					Radius = segment.Instance:GetAttribute("CastRadius") or hitbox.CastData.Radius,
 				}
 
-				function segment:_move()
+				function segment:_update()
 					if segment.Instance.Parent == nil then
 						segments[descendant] = nil
 						return
@@ -127,12 +137,12 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 							local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
 							table.insert(currentFilter, result.Instance)
 
-							hitbox._filterList[result.Instance] = true
+							filterList[result.Instance] = true
 							hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
 						end
 
-						for _, callback in hitbox._callbacksHits do
-							callback(result, segment)
+						for _, callback in callbacksHits do
+							task.defer(callback, result, segment)
 						end
 					end
 
@@ -173,37 +183,38 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 			segment.Distance = 0
 		end
 
-		for _, callback in hitbox._callbacksStart do
+		for _, callback in callbacksStart do
 			callback()
 		end
 
 		hitbox.RaycastResult = nil
 		hitbox.RaycastParams = overrideParams or hitbox.RaycastParams
 		hitbox.Active = true
-		hitbox._lastClock = os.clock()
-		hitbox._activeTimer = timer or math.huge
+
+		lastClock = os.clock()
+		activeTimer = timer or math.huge
 
 		return hitbox
 	end
 
 	function hitbox:HitStop(): Types.Hitbox
 		if hitbox.Active then
-			hitbox._activeTimer = 0
+			activeTimer = 0
 			hitbox.Active = false
 
-			for _, callback in hitbox._callbacksStopped do
+			for _, callback in callbacksStopped do
 				callback(function()
-					table.clear(hitbox._callbacksStart)
-					table.clear(hitbox._callbacksUpdate)
-					table.clear(hitbox._callbacksHits)
-					table.clear(hitbox._callbacksStopped)
+					table.clear(callbacksStart)
+					table.clear(callbacksUpdate)
+					table.clear(callbacksHits)
+					table.clear(callbacksStopped)
 				end)
 			end
 
 			if hitbox.FilterPartsHit then
 				local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
 
-				for instance in hitbox._filterList do
+				for instance in filterList do
 					local index = table.find(currentFilter, instance)
 
 					if index then
@@ -211,7 +222,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 					end
 				end
 
-				table.clear(hitbox._filterList)
+				table.clear(filterList)
 				hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
 			end
 		end
@@ -223,35 +234,38 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		postSimulation:Disconnect()
 	end
 
-	postSimulation = hitbox.Scheduler:Connect(function()
-		if hitbox._activeTimer > 0 then
-			local currentClock: number = os.clock()
-			local delta: number = currentClock - hitbox._lastClock
+	local function Init()
+		postSimulation = RunService.PostSimulation:Connect(function()
+			if activeTimer > 0 then
+				local currentClock: number = os.clock()
+				local delta: number = currentClock - lastClock
 
-			if delta > 1 / hitbox.Resolution then
-				hitbox._lastClock = currentClock
+				if delta >= (1 / hitbox.Resolution) then
+					lastClock = currentClock
 
-				for _, segment in hitbox:GetAllSegments() do
-					task.defer(function()
-						for _, callback in hitbox._callbacksUpdate do
-							callback(delta)
-						end
+					for _, segment in hitbox:GetAllSegments() do
+						task.defer(function()
+							for _, callback in callbacksUpdate do
+								callback(delta)
+							end
 
-						segment:_move()
-					end)
+							segment:_update()
+						end)
+					end
 				end
+
+				activeTimer -= delta
 			end
 
-			hitbox._activeTimer -= delta
-		end
+			if activeTimer <= 0 then
+				hitbox:HitStop()
+			end
+		end)
 
-		if hitbox._activeTimer <= 0 then
-			hitbox:HitStop()
-		end
-	end)
+		hitbox:Reconcile()
+	end
 
-	hitbox:Reconcile()
-
+	Init()
 	return hitbox
 end
 
