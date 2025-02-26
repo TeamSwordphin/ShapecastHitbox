@@ -19,6 +19,8 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		Resolution = 60,
 		Callbacks = {},
 		Attributes = {},
+		FilterPartsHit = false,
+		_filterList = {},
 		_callbacksStart = {},
 		_callbacksUpdate = {},
 		_callbacksHits = {},
@@ -121,6 +123,14 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 					if result then
 						hitbox.RaycastResult = result
 
+						if hitbox.FilterPartsHit then
+							local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
+							table.insert(currentFilter, result.Instance)
+
+							hitbox._filterList[result.Instance] = true
+							hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
+						end
+
 						for _, callback in hitbox._callbacksHits do
 							callback(result, segment)
 						end
@@ -147,7 +157,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 					end
 
 					segment.Distance += magnitude
-					segment.Position = solver:ToPosition(segment)
+					segment.Position = segment.Instance.WorldPosition
 				end
 
 				segments[descendant] = segment
@@ -188,6 +198,21 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 					table.clear(hitbox._callbacksHits)
 					table.clear(hitbox._callbacksStopped)
 				end)
+			end
+
+			if hitbox.FilterPartsHit then
+				local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
+
+				for instance in hitbox._filterList do
+					local index = table.find(currentFilter, instance)
+
+					if index then
+						table.remove(currentFilter, index)
+					end
+				end
+
+				table.clear(hitbox._filterList)
+				hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
 			end
 		end
 

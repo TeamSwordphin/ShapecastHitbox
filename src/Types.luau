@@ -260,6 +260,8 @@ export type Hitbox = {
 	Resolution: number,
 	CastData: CastData,
 	Attributes: { [any]: any },
+	FilterPartsHit: boolean,
+	_filterList: { [Instance]: boolean },
 	_callbacksStart: { StartCallback },
 	_callbacksUpdate: { UpdateCallback },
 	_callbacksHits: { HitCallback },
@@ -366,6 +368,8 @@ export type CastData = {
 	CFrame: CFrame,
 	Size: Vector3,
 	Radius: number,
+
+	_LastCFrameBlockCast: CFrame?,
 }
 
 --[=[

@@ -63,7 +63,8 @@ function cache:ToRender(
 	raycastResult: RaycastResult
 )
 	adornment.Adornment.Size = segment.CastData.Size
-	adornment.Adornment.CFrame = segment.Instance.WorldCFrame * segment.CastData.CFrame
+	adornment.Adornment.CFrame = (segment.CastData._LastCFrameBlockCast or segment.Instance.WorldCFrame)
+		* segment.CastData.CFrame
 	adornment.Adornment.Color3 = raycastResult and Settings.Debug_Instance_Hit_Color or Settings.Debug_Instance_Color
 	adornment.Adornment.ZIndex = raycastResult and 999 or -1
 end
