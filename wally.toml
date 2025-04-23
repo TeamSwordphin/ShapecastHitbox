@@ -1,7 +1,7 @@
 [package]
-name = "teamswordphin/shapecasthitbox"
+name = "ShapecastHitbox"
 description = "A shapecast-centric solution to melee hitboxes. Successor to RaycastHitbox."
-version = "0.1.5"
+version = "0.1.6"
 license = "MIT"
 authors = ["TeamSwordphin", "colbert2677"]
 registry = "https://github.com/UpliftGames/wally-index"

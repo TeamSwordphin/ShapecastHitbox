@@ -361,7 +361,6 @@ export type CastData = {
 	CFrame: CFrame,
 	Size: Vector3,
 	Radius: number,
-
 	_LastCFrameBlockCast: CFrame?,
 }
 
