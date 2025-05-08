@@ -42,8 +42,7 @@
 	@param instance Instance
 	@param raycastParams? RaycastParams
 	@within Hitbox
-	Gets all segments of a hitbox. Segments refers to each individual
-	point that are being raycasted out of.
+	Creates a new hitbox.
 ]=]
 
 --[=[
@@ -264,15 +263,15 @@ export type Hitbox = {
 	GetAllSegments: (self: Hitbox) -> { [any]: Segment },
 	GetSegment: (self: Hitbox, instance: Instance) -> Segment,
 	Reconcile: (self: Hitbox) -> (),
-	HitStart: (self: Hitbox, timer: number?, raycastParams: RaycastParams?) -> (),
-	HitStop: (self: Hitbox) -> (),
+	HitStart: (self: Hitbox, timer: number?, raycastParams: RaycastParams?) -> Hitbox,
+	HitStop: (self: Hitbox) -> Hitbox,
 	Destroy: (self: Hitbox) -> (),
-	SetResolution: (self: Hitbox, resolution: number) -> (),
-	SetCastData: (self: Hitbox, castData: CastData) -> (),
-	BeforeStart: (self: Hitbox, startCallback: StartCallback) -> (),
-	OnUpdate: (self: Hitbox, updateCallback: UpdateCallback) -> (),
-	OnHit: (self: Hitbox, hitCallback: HitCallback) -> (),
-	OnStopped: (self: Hitbox, stopCallback: StopCallback) -> (),
+	SetResolution: (self: Hitbox, resolution: number) -> Hitbox,
+	SetCastData: (self: Hitbox, castData: CastData) -> Hitbox,
+	BeforeStart: (self: Hitbox, startCallback: StartCallback) -> Hitbox,
+	OnUpdate: (self: Hitbox, updateCallback: UpdateCallback) -> Hitbox,
+	OnHit: (self: Hitbox, hitCallback: HitCallback) -> Hitbox,
+	OnStopped: (self: Hitbox, stopCallback: StopCallback) -> Hitbox,
 }
 
 --[=[

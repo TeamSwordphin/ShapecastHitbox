@@ -2,7 +2,7 @@
 --!native
 --!optimize 2
 
--- ShapecastHitbox v.0.1.0
+-- ShapecastHitbox
 -- Phin
 -- August 2024
 
