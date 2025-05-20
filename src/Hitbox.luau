@@ -95,6 +95,14 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		return ReturnHitboxAfterCallbackInsertion(callbacksStopped, callback)
 	end
 
+	function hitbox:RemoveSegment(descendant: any): Types.Hitbox
+		if segments[descendant] then
+			segments[descendant] = nil
+		end
+
+		return hitbox
+	end
+
 	function hitbox:AddSegment(descendant: any): Types.Segment
 		local segment = {}
 

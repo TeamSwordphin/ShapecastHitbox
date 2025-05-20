@@ -263,6 +263,7 @@ export type Hitbox = {
 	GetAllSegments: (self: Hitbox) -> { [any]: Segment },
 	GetSegment: (self: Hitbox, instance: Instance) -> Segment,
 	AddSegment: (self: Hitbox, descendant: any) -> Segment,
+	RemoveSegment: (self: Hitbox, descendant: any) -> Hitbox,
 	Reconcile: (self: Hitbox) -> (),
 	HitStart: (self: Hitbox, timer: number?, raycastParams: RaycastParams?) -> Hitbox,
 	HitStop: (self: Hitbox) -> Hitbox,
