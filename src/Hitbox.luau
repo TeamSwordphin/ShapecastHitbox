@@ -258,14 +258,12 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 				if delta >= (1 / hitbox.Resolution) then
 					lastClock = currentClock
 
-					for _, segment in hitbox:GetAllSegments() do
-						task.defer(function()
-							for _, callback in callbacksUpdate do
-								callback(delta)
-							end
+					for _, callback in callbacksUpdate do
+						callback(delta)
+					end
 
-							segment:_update()
-						end)
+					for _, segment in hitbox:GetAllSegments() do
+						task.defer(segment._update, segment)
 					end
 				end
 
