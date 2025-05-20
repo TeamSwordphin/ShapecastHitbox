@@ -113,7 +113,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 				segment.Distance = 0
 				segment.Instance = descendant
 				segment.Position = solver:ToPosition(segment)
-				segment.LastDirection = Vector3.zero
+				segment.LastDirection = Vector3.one
 				segment.CastData = {
 					CastType = segment.Instance:GetAttribute("CastType") or hitbox.CastData.CastType,
 					Size = segment.Instance:GetAttribute("CastSize") or hitbox.CastData.Size,

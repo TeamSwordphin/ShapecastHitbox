@@ -2,7 +2,7 @@ return {
 	-- The tag or name of the object to find.
 	Tag = "DmgPoint",
 
-	Minimum_Stationary_Length = 0.01,
+	Minimum_Stationary_Length = 0.1,
 
 	-- Reveal if the debug lines should be visible or not.
 	Debug_Visible = false,
