@@ -262,6 +262,7 @@ export type Hitbox = {
 	FilterPartsHit: boolean,
 	GetAllSegments: (self: Hitbox) -> { [any]: Segment },
 	GetSegment: (self: Hitbox, instance: Instance) -> Segment,
+	AddSegment: (self: Hitbox, descendant: any) -> Segment,
 	Reconcile: (self: Hitbox) -> (),
 	HitStart: (self: Hitbox, timer: number?, raycastParams: RaycastParams?) -> Hitbox,
 	HitStop: (self: Hitbox) -> Hitbox,

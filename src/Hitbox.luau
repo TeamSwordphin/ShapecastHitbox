@@ -95,88 +95,89 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		return ReturnHitboxAfterCallbackInsertion(callbacksStopped, callback)
 	end
 
+	function hitbox:AddSegment(descendant: any): Types.Segment
+		local segment = {}
+
+		if descendant:HasTag(Settings.Tag) or descendant.Name == Settings.Tag then
+			local solver = Solvers[descendant.ClassName]
+
+			if not solver then
+				error(
+					`{descendant:GetFullName()}'s class type {descendant.ClassName} is not supported by ShapecastHitbox`
+				)
+			end
+
+			segment.Distance = 0
+			segment.Instance = descendant
+			segment.Position = solver:ToPosition(segment)
+			segment.LastDirection = Vector3.one
+			segment.CastData = {
+				CastType = segment.Instance:GetAttribute("CastType") or hitbox.CastData.CastType,
+				Size = segment.Instance:GetAttribute("CastSize") or hitbox.CastData.Size,
+				CFrame = segment.Instance:GetAttribute("CastCFrame") or hitbox.CastData.CFrame,
+				Radius = segment.Instance:GetAttribute("CastRadius") or hitbox.CastData.Radius,
+			}
+
+			function segment:_update()
+				if segment.Instance.Parent == nil then
+					segments[descendant] = nil
+					return
+				end
+
+				local castType: Types.CastData = segment.CastData.CastType
+				local result, dir: Vector3 = Solvers[castType]:Cast(segment, hitbox.RaycastParams)
+				local magnitude: number = dir.Magnitude
+
+				if result then
+					hitbox.RaycastResult = result
+
+					if hitbox.FilterPartsHit then
+						local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
+						table.insert(currentFilter, result.Instance)
+
+						filterList[result.Instance] = true
+						hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
+					end
+
+					for _, callback in callbacksHits do
+						task.defer(callback, result, segment)
+					end
+				end
+
+				if Settings.Debug_Visible then
+					local adornment: Types.AdornmentData? = Visualizer[castType]:GetAdornment()
+
+					if adornment then
+						Visualizer[castType]:ToRender(adornment, segment, solver:ToVisual(segment), magnitude, result)
+						task.delay(
+							Settings[`Debug_Instance_{castType}_Destroy_Time`],
+							Visualizer[castType].ReturnAdornment,
+							Visualizer[castType],
+							adornment
+						)
+					end
+				end
+
+				if magnitude > 0 then
+					segment.LastDirection = dir
+					segment.Distance += magnitude
+				end
+
+				segment.Position = segment.Instance.WorldPosition
+			end
+
+			segments[descendant] = segment
+		end
+
+		return segment
+	end
+
 	function hitbox:Reconcile(): Types.Hitbox
 		assert(hitbox.Instance ~= nil, "No instance tied to this hitbox! Please set with Hitbox.Instance!")
 		table.clear(segments)
 
 		for _, descendant: any in hitbox.Instance:GetDescendants() do
-			if descendant:HasTag(Settings.Tag) or descendant.Name == Settings.Tag then
-				local solver = Solvers[descendant.ClassName]
-
-				if not solver then
-					error(
-						`{descendant:GetFullName()}'s class type {descendant.ClassName} is not supported by ShapecastHitbox`
-					)
-				end
-
-				local segment = {}
-				segment.Distance = 0
-				segment.Instance = descendant
-				segment.Position = solver:ToPosition(segment)
-				segment.LastDirection = Vector3.one
-				segment.CastData = {
-					CastType = segment.Instance:GetAttribute("CastType") or hitbox.CastData.CastType,
-					Size = segment.Instance:GetAttribute("CastSize") or hitbox.CastData.Size,
-					CFrame = segment.Instance:GetAttribute("CastCFrame") or hitbox.CastData.CFrame,
-					Radius = segment.Instance:GetAttribute("CastRadius") or hitbox.CastData.Radius,
-				}
-
-				function segment:_update()
-					if segment.Instance.Parent == nil then
-						segments[descendant] = nil
-						return
-					end
-
-					local castType: Types.CastData = segment.CastData.CastType
-					local result, dir: Vector3 = Solvers[castType]:Cast(segment, hitbox.RaycastParams)
-					local magnitude: number = dir.Magnitude
-
-					if result then
-						hitbox.RaycastResult = result
-
-						if hitbox.FilterPartsHit then
-							local currentFilter = hitbox.RaycastParams.FilterDescendantsInstances
-							table.insert(currentFilter, result.Instance)
-
-							filterList[result.Instance] = true
-							hitbox.RaycastParams.FilterDescendantsInstances = currentFilter
-						end
-
-						for _, callback in callbacksHits do
-							task.defer(callback, result, segment)
-						end
-					end
-
-					if Settings.Debug_Visible then
-						local adornment: Types.AdornmentData? = Visualizer[castType]:GetAdornment()
-
-						if adornment then
-							Visualizer[castType]:ToRender(
-								adornment,
-								segment,
-								solver:ToVisual(segment),
-								magnitude,
-								result
-							)
-							task.delay(
-								Settings[`Debug_Instance_{castType}_Destroy_Time`],
-								Visualizer[castType].ReturnAdornment,
-								Visualizer[castType],
-								adornment
-							)
-						end
-					end
-
-					if magnitude > 0 then
-						segment.LastDirection = dir
-						segment.Distance += magnitude
-					end
-
-					segment.Position = segment.Instance.WorldPosition
-				end
-
-				segments[descendant] = segment
-			end
+			hitbox:AddSegment(descendant)
 		end
 
 		return hitbox
