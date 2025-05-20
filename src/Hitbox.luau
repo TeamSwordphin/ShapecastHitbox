@@ -113,6 +113,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 				segment.Distance = 0
 				segment.Instance = descendant
 				segment.Position = solver:ToPosition(segment)
+				segment.LastDirection = Vector3.zero
 				segment.CastData = {
 					CastType = segment.Instance:GetAttribute("CastType") or hitbox.CastData.CastType,
 					Size = segment.Instance:GetAttribute("CastSize") or hitbox.CastData.Size,
@@ -166,7 +167,11 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 						end
 					end
 
-					segment.Distance += magnitude
+					if magnitude > 0 then
+						segment.LastDirection = dir
+						segment.Distance += magnitude
+					end
+
 					segment.Position = segment.Instance.WorldPosition
 				end
 
@@ -179,6 +184,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 
 	function hitbox:HitStart(timer: number?, overrideParams: RaycastParams?): Types.Hitbox
 		for _, segment in hitbox:GetAllSegments() do
+			segment.Position = nil -- Reset its state
 			segment.Position = Solvers[segment.Instance.ClassName]:ToPosition(segment)
 			segment.Distance = 0
 		end

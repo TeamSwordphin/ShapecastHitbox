@@ -313,7 +313,8 @@ export type Hitbox = {
 export type Segment = {
 	Instance: any,
 	Distance: number,
-	Position: Vector3,
+	Position: Vector3?,
+	LastDirection: Vector3,
 	RaycastResult: RaycastResult?,
 	CastData: CastData,
 	_update: (self: Segment) -> (),
