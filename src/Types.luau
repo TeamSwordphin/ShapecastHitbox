@@ -268,6 +268,7 @@ export type Hitbox = {
 	HitStart: (self: Hitbox, timer: number?, raycastParams: RaycastParams?) -> Hitbox,
 	HitStop: (self: Hitbox) -> Hitbox,
 	Destroy: (self: Hitbox) -> (),
+	OnDestroying: (self: Hitbox, destroyCallback: DestroyingCallback) -> (),
 	SetResolution: (self: Hitbox, resolution: number) -> Hitbox,
 	SetCastData: (self: Hitbox, castData: CastData) -> Hitbox,
 	BeforeStart: (self: Hitbox, startCallback: StartCallback) -> Hitbox,
@@ -408,6 +409,7 @@ export type BoxAdornmentData = {
 	LastUse: number,
 }
 
+export type DestroyingCallback = () -> ()
 export type StartCallback = () -> ()
 export type UpdateCallback = (delta: number) -> ()
 export type HitCallback = (raycastResult: RaycastResult, segmentHit: Segment) -> ()

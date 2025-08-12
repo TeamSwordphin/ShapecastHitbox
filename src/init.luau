@@ -24,8 +24,42 @@ export type AdornmentData = Types.AdornmentData
 export type SphereAdornmentData = Types.SphereAdornmentData
 export type BoxAdornmentData = Types.BoxAdornmentData
 
+local ActiveHitboxes = {}
+
+local function NewHitbox(...): Hitbox
+	local hitbox = require(script.Hitbox)(...)
+	local instance = select(1, ...)
+
+	if not ActiveHitboxes[instance] then
+		ActiveHitboxes[instance] = {}
+	end
+
+	table.insert(ActiveHitboxes[instance], hitbox)
+
+	hitbox:OnDestroying(function()
+		local totalHitboxes: number = #ActiveHitboxes[instance]
+
+		for i = totalHitboxes, 1, -1 do
+			if ActiveHitboxes[instance][i] == hitbox then
+				table.remove(ActiveHitboxes[instance], i)
+
+				if totalHitboxes == 1 then
+					ActiveHitboxes[instance] = nil
+				end
+			end
+		end
+	end)
+
+	return hitbox
+end
+
+local function GetHitboxes(instance: Instance): { Hitbox }
+	return ActiveHitboxes[instance] or {}
+end
+
 return {
-	new = require(script.Hitbox),
+	new = NewHitbox,
+	GetHitboxes = GetHitboxes,
 	Settings = require(script.Settings),
 	CastTypes = {
 		Raycast = "Raycast",

@@ -26,6 +26,7 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 	local callbacksUpdate: { Types.UpdateCallback } = {}
 	local callbacksHits: { Types.HitCallback } = {}
 	local callbacksStopped: { Types.StopCallback } = {}
+	local callbacksDestroying: { Types.DestroyingCallback } = {}
 
 	local activeTimer: number = 0
 	local lastClock: number = 0
@@ -39,8 +40,9 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 			| Types.StartCallback
 			| Types.UpdateCallback
 			| Types.StopCallback
+			| Types.DestroyingCallback
 		},
-		callback: Types.HitCallback | Types.StartCallback | Types.UpdateCallback | Types.StopCallback
+		callback: Types.HitCallback | Types.StartCallback | Types.UpdateCallback | Types.StopCallback | Types.DestroyingCallback
 	): Types.Hitbox
 		table.insert(list, callback)
 		return hitbox
@@ -77,6 +79,10 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		end
 
 		return hitbox
+	end
+
+	function hitbox:OnDestroying(callback: Types.DestroyingCallback): Types.Hitbox
+		return ReturnHitboxAfterCallbackInsertion(callbacksDestroying, callback)
 	end
 
 	function hitbox:BeforeStart(callback: Types.StartCallback): Types.Hitbox
@@ -247,6 +253,21 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 
 	function hitbox:Destroy()
 		postSimulation:Disconnect()
+
+		for _, callback in callbacksDestroying do
+			task.spawn(callback)
+		end
+
+		table.clear(hitbox)
+
+		setmetatable(hitbox, {
+			__index = function(_, key)
+				error(`Attempt to access '{key}' on a destroyed hitbox`, 2)
+			end,
+			__newindex = function(_, key, _)
+				error(`Attempt to set '{key}' on a destroyed hitbox`, 2)
+			end,
+		})
 	end
 
 	local function Init()
