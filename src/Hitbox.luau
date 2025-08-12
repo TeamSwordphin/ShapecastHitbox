@@ -253,21 +253,13 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 
 	function hitbox:Destroy()
 		postSimulation:Disconnect()
+		hitbox:HitStop()
 
 		for _, callback in callbacksDestroying do
 			task.spawn(callback)
 		end
 
 		table.clear(hitbox)
-
-		setmetatable(hitbox, {
-			__index = function(_, key)
-				error(`Attempt to access '{key}' on a destroyed hitbox`, 2)
-			end,
-			__newindex = function(_, key, _)
-				error(`Attempt to set '{key}' on a destroyed hitbox`, 2)
-			end,
-		})
 	end
 
 	local function Init()
