@@ -260,6 +260,11 @@ function CreateHitbox(instance: Instance?, raycastParams: RaycastParams?): Types
 		end
 
 		table.clear(hitbox)
+		table.clear(callbacksStart)
+		table.clear(callbacksUpdate)
+		table.clear(callbacksHits)
+		table.clear(callbacksStopped)
+		table.clear(callbacksDestroying)
 	end
 
 	local function Init()

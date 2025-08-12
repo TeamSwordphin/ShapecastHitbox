@@ -37,6 +37,10 @@ local function NewHitbox(...): Hitbox
 	table.insert(ActiveHitboxes[instance], hitbox)
 
 	hitbox:OnDestroying(function()
+		if not ActiveHitboxes[instance] then
+			return
+		end
+
 		local totalHitboxes: number = #ActiveHitboxes[instance]
 
 		for i = totalHitboxes, 1, -1 do
