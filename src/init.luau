@@ -57,13 +57,8 @@ local function NewHitbox(...): Hitbox
 	return hitbox
 end
 
-local function GetHitboxes(instance: Instance): { Hitbox }
-	return ActiveHitboxes[instance] or {}
-end
-
-return {
+local ShapecastHitbox = {
 	new = NewHitbox,
-	GetHitboxes = GetHitboxes,
 	Settings = require(script.Settings),
 	CastTypes = {
 		Raycast = "Raycast",
@@ -71,3 +66,13 @@ return {
 		Spherecast = "Spherecast",
 	},
 }
+
+function ShapecastHitbox:GetHitboxesFromInstance(instance: Instance): { Hitbox }
+	return ActiveHitboxes[instance] or {}
+end
+
+function ShapecastHitbox:GetActiveInstances(): { [Instance]: { Hitbox } }
+	return ActiveHitboxes
+end
+
+return ShapecastHitbox
